@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, theme, Space } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, theme, Space, Tag } from 'antd'
 import {
   DashboardOutlined,
   MoneyCollectOutlined,
@@ -21,12 +21,14 @@ import {
   SolutionOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../../store/authStore'
+import { PERMISSIONS, Role } from '../../store/permissionStore'
 import DataBackup from '../DataBackup'
 import AppVersion from '../AppVersion'
+import Permission from '../Permission'
 
 const { Header, Sider, Content } = Layout
 
-const menuItems = [
+const allMenuItems = [
   { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
   { key: '/income', icon: <MoneyCollectOutlined />, label: '收入管理' },
   { key: '/expense', icon: <WalletOutlined />, label: '支出管理' },
@@ -48,9 +50,20 @@ const menuItems = [
   { key: '/contract', icon: <FileProtectOutlined />, label: '合同管理' },
   { key: '/expense-report', icon: <PayCircleOutlined />, label: '费用报销' },
   { key: '/quotation', icon: <SolutionOutlined />, label: '报价管理' },
+  { key: '/audit-log', icon: <FileTextOutlined />, label: '操作日志', adminOnly: true },
+  { key: '/user-management', icon: <TeamOutlined />, label: '用户管理', adminOnly: true },
   { key: '/reports', icon: <BarChartOutlined />, label: '报表中心' },
   { key: '/settings', icon: <SettingOutlined />, label: '系统设置' },
 ]
+
+// 根据角色过滤菜单
+const filterMenuByRole = (role: Role) => {
+  const hiddenMenus = PERMISSIONS[role].hiddenMenus
+  return allMenuItems.filter(item => {
+    if (item.adminOnly && role !== 'admin') return false
+    return !hiddenMenus.includes(item.key)
+  })
+}
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -58,6 +71,18 @@ export default function MainLayout() {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
+
+  // 根据用户角色获取菜单
+  const menuItems = filterMenuByRole(user?.role || 'viewer')
+
+  const getRoleTag = (role: string) => {
+    const map: Record<string, { color: string; text: string }> = {
+      admin: { color: 'red', text: '管理员' },
+      accountant: { color: 'blue', text: '财务' },
+      viewer: { color: 'green', text: '访客' },
+    }
+    return map[role] || { color: 'default', text: role }
+  }
 
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key)
@@ -99,11 +124,18 @@ export default function MainLayout() {
           <div className="pr-6">
             <Space size="middle">
               <AppVersion />
-              <DataBackup />
+              <Permission action="backup">
+                <DataBackup />
+              </Permission>
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                 <div className="flex items-center cursor-pointer gap-2">
                   <Avatar icon={<UserOutlined />} />
-                  <span>{user?.name || '管理员'}</span>
+                  <span>
+                    {user?.name || '管理员'}
+                    <Tag color={getRoleTag(user?.role || '').color} className="ml-2">
+                      {getRoleTag(user?.role || '').text}
+                    </Tag>
+                  </span>
                 </div>
               </Dropdown>
             </Space>

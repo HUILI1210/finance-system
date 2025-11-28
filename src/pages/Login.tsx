@@ -1,7 +1,8 @@
-import { Form, Input, Button, Card, message } from 'antd'
+import { Form, Input, Button, Card, message, Divider, Tag } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { usePermissionStore, USER_PASSWORDS } from '../store/permissionStore'
 
 interface LoginForm {
   username: string
@@ -11,24 +12,46 @@ interface LoginForm {
 export default function Login() {
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
+  const { users, addLog } = usePermissionStore()
 
   const onFinish = (values: LoginForm) => {
-    // 模拟登录验证
-    if (values.username === 'admin' && values.password === 'admin123') {
+    // 查找用户
+    const user = users.find(u => u.username === values.username && u.status === 'active')
+    const correctPassword = USER_PASSWORDS[values.username]
+
+    if (user && correctPassword === values.password) {
       login(
         {
-          id: '1',
-          username: 'admin',
-          name: '系统管理员',
-          role: 'admin',
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          role: user.role,
         },
-        'mock-token-12345'
+        `token-${Date.now()}`
       )
-      message.success('登录成功')
+      // 记录登录日志
+      addLog({
+        userId: user.id,
+        userName: user.name,
+        userRole: user.role,
+        action: 'login',
+        module: '系统',
+        description: `${user.name} 登录系统`,
+      })
+      message.success(`欢迎回来，${user.name}`)
       navigate('/dashboard')
     } else {
       message.error('用户名或密码错误')
     }
+  }
+
+  const getRoleTag = (role: string) => {
+    const map: Record<string, { color: string; text: string }> = {
+      admin: { color: 'red', text: '管理员' },
+      accountant: { color: 'blue', text: '财务' },
+      viewer: { color: 'green', text: '访客' },
+    }
+    return map[role] || { color: 'default', text: role }
   }
 
   return (
@@ -62,8 +85,17 @@ export default function Login() {
             </Button>
           </Form.Item>
         </Form>
-        <div className="text-center text-gray-500 text-sm">
-          默认账号: admin / admin123
+        <Divider>测试账号</Divider>
+        <div className="space-y-2 text-sm">
+          {users.filter(u => u.status === 'active').map(u => (
+            <div key={u.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+              <span>
+                <Tag color={getRoleTag(u.role).color}>{getRoleTag(u.role).text}</Tag>
+                {u.username}
+              </span>
+              <span className="text-gray-400">{USER_PASSWORDS[u.username]}</span>
+            </div>
+          ))}
         </div>
       </Card>
     </div>

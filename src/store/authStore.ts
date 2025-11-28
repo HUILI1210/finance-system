@@ -1,11 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { Role } from './permissionStore'
 
 interface User {
   id: string
   username: string
   name: string
-  role: string
+  role: Role
 }
 
 interface AuthState {

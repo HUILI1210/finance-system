@@ -26,6 +26,8 @@ const TaxList = lazy(() => import('./pages/Tax/TaxList'))
 const ContractList = lazy(() => import('./pages/Contract/ContractList'))
 const ExpenseReportList = lazy(() => import('./pages/Expense/ExpenseReportList'))
 const QuotationList = lazy(() => import('./pages/Quotation/QuotationList'))
+const AuditLogList = lazy(() => import('./pages/AuditLog/AuditLogList'))
+const UserList = lazy(() => import('./pages/UserManagement/UserList'))
 
 // 加载中组件
 const PageLoading = () => (
@@ -74,6 +76,8 @@ function App() {
               <Route path="contract" element={<ContractList />} />
               <Route path="expense-report" element={<ExpenseReportList />} />
               <Route path="quotation" element={<QuotationList />} />
+              <Route path="audit-log" element={<AuditLogList />} />
+              <Route path="user-management" element={<UserList />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
             </Route>
