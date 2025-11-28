@@ -4,12 +4,14 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { useFinanceStore, FinanceRecord } from '../../store/financeStore'
+import ExportButton from '../../components/ExportButton'
+import ImportButton from '../../components/ImportButton'
 
 const categories = ['办公费用', '人力成本', '营销费用', '差旅费', '其他支出']
 
 export default function ExpenseList() {
   const navigate = useNavigate()
-  const { records, deleteRecord } = useFinanceStore()
+  const { records, deleteRecord, addRecord } = useFinanceStore()
   const expenseRecords = records.filter(r => r.type === 'expense')
   
   const [searchText, setSearchText] = useState('')
@@ -20,6 +22,29 @@ export default function ExpenseList() {
     const matchCategory = !selectedCategory || record.category === selectedCategory
     return matchText && matchCategory
   })
+
+  const handleImport = (data: Record<string, string>[]) => {
+    data.forEach(row => {
+      if (row['金额'] && row['类别']) {
+        addRecord({
+          id: Date.now().toString() + Math.random(),
+          type: 'expense',
+          amount: parseFloat(row['金额']) || 0,
+          category: row['类别'] || '其他支出',
+          description: row['描述'] || '',
+          date: row['日期'] || dayjs().format('YYYY-MM-DD'),
+          createdAt: dayjs().format('YYYY-MM-DD'),
+        })
+      }
+    })
+  }
+
+  const exportColumns = [
+    { title: '日期', dataIndex: 'date' },
+    { title: '类别', dataIndex: 'category' },
+    { title: '描述', dataIndex: 'description' },
+    { title: '金额', dataIndex: 'amount', render: (v: unknown) => String(v) },
+  ]
 
   const handleDelete = (id: string) => {
     deleteRecord(id)
@@ -49,9 +74,13 @@ export default function ExpenseList() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">支出管理</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/expense/create')}>
-          新增支出
-        </Button>
+        <Space>
+          <ImportButton onImport={handleImport} />
+          <ExportButton data={filteredRecords as unknown as Record<string, unknown>[]} columns={exportColumns} filename="支出记录" />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/expense/create')}>
+            新增支出
+          </Button>
+        </Space>
       </div>
       <div className="flex gap-4 mb-4">
         <Input

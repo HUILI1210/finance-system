@@ -1,10 +1,34 @@
-import { Card, Row, Col, DatePicker, Button, Table, Space } from 'antd'
+import { Card, Row, Col, DatePicker, Button, Table, Space, message } from 'antd'
 import { DownloadOutlined } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
 import { useFinanceStore } from '../store/financeStore'
+import { exportToCSV } from '../utils/export'
 
 export default function Reports() {
   const { records } = useFinanceStore()
+
+  const handleExportExcel = () => {
+    const data = records.map(r => ({
+      日期: r.date,
+      类型: r.type === 'income' ? '收入' : '支出',
+      类别: r.category,
+      描述: r.description,
+      金额: r.amount,
+    }))
+    exportToCSV(data as unknown as Record<string, unknown>[], [
+      { title: '日期', dataIndex: '日期' },
+      { title: '类型', dataIndex: '类型' },
+      { title: '类别', dataIndex: '类别' },
+      { title: '描述', dataIndex: '描述' },
+      { title: '金额', dataIndex: '金额', render: (v: unknown) => String(v) },
+    ], '财务报表')
+    message.success('导出成功')
+  }
+
+  const handleExportPDF = () => {
+    window.print()
+    message.info('请使用浏览器打印功能保存为PDF')
+  }
 
   const incomeByCategory = records
     .filter(r => r.type === 'income')
@@ -57,8 +81,8 @@ export default function Reports() {
         <h2 className="text-xl font-bold">报表中心</h2>
         <Space>
           <DatePicker.RangePicker />
-          <Button icon={<DownloadOutlined />}>导出Excel</Button>
-          <Button icon={<DownloadOutlined />}>导出PDF</Button>
+          <Button icon={<DownloadOutlined />} onClick={handleExportExcel}>导出Excel</Button>
+          <Button icon={<DownloadOutlined />} onClick={handleExportPDF}>导出PDF</Button>
         </Space>
       </div>
 
