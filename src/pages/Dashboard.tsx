@@ -18,15 +18,45 @@ export default function Dashboard() {
   const totalExpense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0)
   const profit = totalIncome - totalExpense
   const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0)
-  const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0)
+  
+  // 实际预算使用：根据支出记录自动计算
+  const totalSpent = budgets.reduce((sum, b) => {
+    const categorySpent = records
+      .filter(r => r.type === 'expense' && r.category === b.category && r.date.startsWith(b.month))
+      .reduce((s, r) => s + r.amount, 0)
+    return sum + categorySpent
+  }, 0)
+
+  // 按月份分组计算收支趋势
+  const monthlyData = records.reduce((acc, r) => {
+    const month = r.date.substring(0, 7)
+    if (!acc[month]) acc[month] = { income: 0, expense: 0 }
+    if (r.type === 'income') acc[month].income += r.amount
+    else acc[month].expense += r.amount
+    return acc
+  }, {} as Record<string, { income: number; expense: number }>)
+
+  const sortedMonths = Object.keys(monthlyData).sort().slice(-6)
+  const trendIncome = sortedMonths.map(m => monthlyData[m]?.income || 0)
+  const trendExpense = sortedMonths.map(m => monthlyData[m]?.expense || 0)
+
+  // 按类别分组支出
+  const expenseByCategory = records
+    .filter(r => r.type === 'expense')
+    .reduce((acc, r) => {
+      acc[r.category] = (acc[r.category] || 0) + r.amount
+      return acc
+    }, {} as Record<string, number>)
 
   const trendOption = {
     title: { text: '收支趋势', left: 'center' },
-    tooltip: { trigger: 'axis' },
+    tooltip: { trigger: 'axis', formatter: (params: Array<{seriesName: string; value: number; axisValue: string}>) => {
+      return params.map(p => `${p.seriesName}: ¥${p.value.toLocaleString()}`).join('<br/>')
+    }},
     legend: { data: ['收入', '支出'], bottom: 0 },
     xAxis: {
       type: 'category',
-      data: ['1月', '2月', '3月', '4月', '5月', '6月'],
+      data: sortedMonths.length > 0 ? sortedMonths : ['暂无数据'],
     },
     yAxis: { type: 'value' },
     series: [
@@ -34,14 +64,14 @@ export default function Dashboard() {
         name: '收入',
         type: 'line',
         smooth: true,
-        data: [230000, 280000, 250000, 320000, 290000, 350000],
+        data: trendIncome.length > 0 ? trendIncome : [0],
         itemStyle: { color: '#52c41a' },
       },
       {
         name: '支出',
         type: 'line',
         smooth: true,
-        data: [120000, 135000, 148000, 156000, 142000, 168000],
+        data: trendExpense.length > 0 ? trendExpense : [0],
         itemStyle: { color: '#ff4d4f' },
       },
     ],
@@ -49,21 +79,23 @@ export default function Dashboard() {
 
   const pieOption = {
     title: { text: '支出分类', left: 'center' },
-    tooltip: { trigger: 'item' },
+    tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
     legend: { bottom: 0 },
     series: [
       {
         type: 'pie',
         radius: ['40%', '70%'],
-        data: [
-          { value: 45000, name: '人力成本' },
-          { value: 25000, name: '办公费用' },
-          { value: 15000, name: '营销费用' },
-          { value: 10000, name: '其他' },
-        ],
+        data: Object.entries(expenseByCategory).map(([name, value]) => ({ name, value })),
       },
     ],
   }
+
+  // 预算实际使用数据
+  const budgetActualSpent = budgets.map(b => {
+    return records
+      .filter(r => r.type === 'expense' && r.category === b.category && r.date.startsWith(b.month))
+      .reduce((sum, r) => sum + r.amount, 0)
+  })
 
   const budgetOption = {
     title: { text: '预算执行情况', left: 'center' },
@@ -81,9 +113,9 @@ export default function Dashboard() {
         itemStyle: { color: '#1890ff' },
       },
       {
-        name: '已用',
+        name: '实际支出',
         type: 'bar',
-        data: budgets.map(b => b.spent),
+        data: budgetActualSpent,
         itemStyle: { color: '#faad14' },
       },
     ],

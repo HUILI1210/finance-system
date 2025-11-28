@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Table, Button, Space, Select, Tag, Modal, Descriptions, message } from 'antd'
 import { EyeOutlined, CheckOutlined, DownloadOutlined } from '@ant-design/icons'
 import { useSalaryStore, Payroll } from '../../store/salaryStore'
+import { useFinanceStore } from '../../store/financeStore'
 
 export default function PayrollList() {
   const { payrolls, employees, salaryStructures, updatePayroll, addPayroll } = useSalaryStore()
+  const { addRecord } = useFinanceStore()
   const [selectedMonth, setSelectedMonth] = useState('2024-01')
   const [detailVisible, setDetailVisible] = useState(false)
   const [selectedPayroll, setSelectedPayroll] = useState<Payroll | null>(null)
@@ -17,8 +19,22 @@ export default function PayrollList() {
   }
 
   const handlePay = (id: string) => {
-    updatePayroll(id, { status: 'paid', paidDate: new Date().toISOString().split('T')[0] })
-    message.success('工资已发放')
+    const payroll = payrolls.find(p => p.id === id)
+    if (payroll) {
+      const today = new Date().toISOString().split('T')[0]
+      updatePayroll(id, { status: 'paid', paidDate: today })
+      // 自动创建支出记录
+      addRecord({
+        id: `salary-${id}-${Date.now()}`,
+        type: 'expense',
+        amount: payroll.netSalary,
+        category: '人力成本',
+        description: `${payroll.month} 工资发放 - ${payroll.employeeName}`,
+        date: today,
+        createdAt: today,
+      })
+      message.success('工资已发放，已自动生成支出记录')
+    }
   }
 
   const generatePayroll = () => {
