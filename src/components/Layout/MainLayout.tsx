@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, theme } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, theme, Space } from 'antd'
 import {
   DashboardOutlined,
   MoneyCollectOutlined,
@@ -21,6 +21,8 @@ import {
   SolutionOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../../store/authStore'
+import DataBackup from '../DataBackup'
+import AppVersion from '../AppVersion'
 
 const { Header, Sider, Content } = Layout
 
@@ -95,12 +97,16 @@ export default function MainLayout() {
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </div>
           <div className="pr-6">
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <div className="flex items-center cursor-pointer gap-2">
-                <Avatar icon={<UserOutlined />} />
-                <span>{user?.name || '管理员'}</span>
-              </div>
-            </Dropdown>
+            <Space size="middle">
+              <AppVersion />
+              <DataBackup />
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                <div className="flex items-center cursor-pointer gap-2">
+                  <Avatar icon={<UserOutlined />} />
+                  <span>{user?.name || '管理员'}</span>
+                </div>
+              </Dropdown>
+            </Space>
           </div>
         </Header>
         <Content

@@ -1,25 +1,38 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Spin } from 'antd'
 import MainLayout from './components/Layout/MainLayout'
 import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import IncomeList from './pages/Income/IncomeList'
-import IncomeForm from './pages/Income/IncomeForm'
-import ExpenseList from './pages/Expense/ExpenseList'
-import ExpenseForm from './pages/Expense/ExpenseForm'
-import BudgetList from './pages/Budget/BudgetList'
-import Reports from './pages/Reports'
-import Settings from './pages/Settings'
-import EmployeeList from './pages/Salary/EmployeeList'
-import PayrollList from './pages/Salary/PayrollList'
-import BankAccounts from './pages/Bank/BankAccounts'
-import ReceivableList from './pages/Receivable/ReceivableList'
-import PayableList from './pages/Payable/PayableList'
-import InvoiceList from './pages/Invoice/InvoiceList'
-import TaxList from './pages/Tax/TaxList'
-import ContractList from './pages/Contract/ContractList'
-import ExpenseReportList from './pages/Expense/ExpenseReportList'
-import QuotationList from './pages/Quotation/QuotationList'
+import ErrorBoundary from './components/ErrorBoundary'
+import NetworkStatus from './components/NetworkStatus'
 import { useAuthStore } from './store/authStore'
+
+// 路由懒加载
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const IncomeList = lazy(() => import('./pages/Income/IncomeList'))
+const IncomeForm = lazy(() => import('./pages/Income/IncomeForm'))
+const ExpenseList = lazy(() => import('./pages/Expense/ExpenseList'))
+const ExpenseForm = lazy(() => import('./pages/Expense/ExpenseForm'))
+const BudgetList = lazy(() => import('./pages/Budget/BudgetList'))
+const Reports = lazy(() => import('./pages/Reports'))
+const Settings = lazy(() => import('./pages/Settings'))
+const EmployeeList = lazy(() => import('./pages/Salary/EmployeeList'))
+const PayrollList = lazy(() => import('./pages/Salary/PayrollList'))
+const BankAccounts = lazy(() => import('./pages/Bank/BankAccounts'))
+const ReceivableList = lazy(() => import('./pages/Receivable/ReceivableList'))
+const PayableList = lazy(() => import('./pages/Payable/PayableList'))
+const InvoiceList = lazy(() => import('./pages/Invoice/InvoiceList'))
+const TaxList = lazy(() => import('./pages/Tax/TaxList'))
+const ContractList = lazy(() => import('./pages/Contract/ContractList'))
+const ExpenseReportList = lazy(() => import('./pages/Expense/ExpenseReportList'))
+const QuotationList = lazy(() => import('./pages/Quotation/QuotationList'))
+
+// 加载中组件
+const PageLoading = () => (
+  <div className="flex items-center justify-center h-64">
+    <Spin size="large" tip="加载中..." />
+  </div>
+)
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -28,41 +41,46 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <BrowserRouter basename="/finance-system">
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <MainLayout />
-            </PrivateRoute>
-          }
-        >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="income" element={<IncomeList />} />
-          <Route path="income/create" element={<IncomeForm />} />
-          <Route path="income/edit/:id" element={<IncomeForm />} />
-          <Route path="expense" element={<ExpenseList />} />
-          <Route path="expense/create" element={<ExpenseForm />} />
-          <Route path="expense/edit/:id" element={<ExpenseForm />} />
-          <Route path="budget" element={<BudgetList />} />
-          <Route path="salary/employees" element={<EmployeeList />} />
-          <Route path="salary/payroll" element={<PayrollList />} />
-          <Route path="bank" element={<BankAccounts />} />
-          <Route path="receivable" element={<ReceivableList />} />
-          <Route path="payable" element={<PayableList />} />
-          <Route path="invoice" element={<InvoiceList />} />
-          <Route path="tax" element={<TaxList />} />
-          <Route path="contract" element={<ContractList />} />
-          <Route path="expense-report" element={<ExpenseReportList />} />
-          <Route path="quotation" element={<QuotationList />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter basename="/finance-system">
+        <NetworkStatus />
+        <Suspense fallback={<PageLoading />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <MainLayout />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="income" element={<IncomeList />} />
+              <Route path="income/create" element={<IncomeForm />} />
+              <Route path="income/edit/:id" element={<IncomeForm />} />
+              <Route path="expense" element={<ExpenseList />} />
+              <Route path="expense/create" element={<ExpenseForm />} />
+              <Route path="expense/edit/:id" element={<ExpenseForm />} />
+              <Route path="budget" element={<BudgetList />} />
+              <Route path="salary/employees" element={<EmployeeList />} />
+              <Route path="salary/payroll" element={<PayrollList />} />
+              <Route path="bank" element={<BankAccounts />} />
+              <Route path="receivable" element={<ReceivableList />} />
+              <Route path="payable" element={<PayableList />} />
+              <Route path="invoice" element={<InvoiceList />} />
+              <Route path="tax" element={<TaxList />} />
+              <Route path="contract" element={<ContractList />} />
+              <Route path="expense-report" element={<ExpenseReportList />} />
+              <Route path="quotation" element={<QuotationList />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 
