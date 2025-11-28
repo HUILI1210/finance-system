@@ -1,0 +1,5 @@
+function f(r,t,o){const n=t.map(i=>i.title).join(","),e=r.map(i=>t.map(d=>{const u=i[d.dataIndex];let s=d.render?d.render(u,i):String(u??"");return(s.includes(",")||s.includes(`
+`)||s.includes('"'))&&(s=`"${s.replace(/"/g,'""')}"`),s}).join(",")).join(`
+`),l="\uFEFF"+n+`
+`+e,a=new Blob([l],{type:"text/csv;charset=utf-8;"}),c=document.createElement("a");c.href=URL.createObjectURL(a),c.download=`${o}.csv`,c.click(),URL.revokeObjectURL(c.href)}function m(r,t){const o=JSON.stringify(r,null,2),n=new Blob([o],{type:"application/json"}),e=document.createElement("a");e.href=URL.createObjectURL(n),e.download=`${t}.json`,e.click(),URL.revokeObjectURL(e.href)}function h(r){const t=r.trim().split(`
+`);if(t.length<2)return[];const o=t[0].split(",").map(e=>e.trim().replace(/^"|"$/g,"")),n=[];for(let e=1;e<t.length;e++){const p=t[e].split(",").map(a=>a.trim().replace(/^"|"$/g,"")),l={};o.forEach((a,c)=>{l[a]=p[c]||""}),n.push(l)}return n}function b(r){return new Promise((t,o)=>{const n=new FileReader;n.onload=()=>t(n.result),n.onerror=o,n.readAsText(r)})}export{m as a,f as e,h as p,b as r};
