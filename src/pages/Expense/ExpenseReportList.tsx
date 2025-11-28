@@ -3,12 +3,15 @@ import { Table, Button, Tag, Modal, Form, Input, InputNumber, DatePicker, Select
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useExpenseStore, ExpenseReport, ExpenseItem } from '../../store/expenseStore'
+import { useFinanceStore } from '../../store/financeStore'
+import Permission from '../../components/Permission'
 
 const expenseCategories = ['差旅费', '招待费', '办公费', '交通费', '培训费', '其他']
 const itemCategories = ['交通费', '住宿费', '餐饮费', '礼品费', '办公用品', '快递费', '其他']
 
 export default function ExpenseReportList() {
   const { expenseReports, addExpenseReport, updateExpenseReport, deleteExpenseReport } = useExpenseStore()
+  const { addRecord } = useFinanceStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [selectedReport, setSelectedReport] = useState<ExpenseReport | null>(null)
@@ -87,8 +90,24 @@ export default function ExpenseReportList() {
   }
 
   const handlePay = (id: string) => {
-    updateExpenseReport(id, { status: 'paid', paidDate: dayjs().format('YYYY-MM-DD') })
-    message.success('已付款')
+    const report = expenseReports.find(r => r.id === id)
+    if (!report) return
+    
+    const today = dayjs().format('YYYY-MM-DD')
+    updateExpenseReport(id, { status: 'paid', paidDate: today })
+    
+    // 自动创建支出记录
+    addRecord({
+      id: `expense-report-${id}-${Date.now()}`,
+      type: 'expense',
+      amount: report.amount,
+      category: report.category,
+      description: `费用报销 - ${report.applicant} (${report.reportNo})`,
+      date: today,
+      createdAt: today,
+    })
+    
+    message.success('已付款，已自动生成支出记录')
   }
 
   const handleDelete = (id: string) => {
@@ -122,13 +141,15 @@ export default function ExpenseReportList() {
         <>
           <Button icon={<EyeOutlined />} size="small" onClick={() => showDetail(record)}>详情</Button>
           {record.status === 'pending' && (
-            <>
+            <Permission action="update">
               <Button icon={<CheckOutlined />} size="small" type="primary" className="ml-1" onClick={() => handleApprove(record.id)}>通过</Button>
               <Button icon={<CloseOutlined />} size="small" danger className="ml-1" onClick={() => handleReject(record.id)}>驳回</Button>
-            </>
+            </Permission>
           )}
           {record.status === 'approved' && (
-            <Button size="small" type="primary" className="ml-1" onClick={() => handlePay(record.id)}>付款</Button>
+            <Permission action="update">
+              <Button size="small" type="primary" className="ml-1" onClick={() => handlePay(record.id)}>付款</Button>
+            </Permission>
           )}
           {(record.status === 'draft' || record.status === 'rejected') && (
             <>

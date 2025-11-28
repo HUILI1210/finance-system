@@ -4,7 +4,8 @@ export default defineConfig({
     plugins: [react()],
     base: '/finance-system/',
     server: {
-        port: 3000,
-        open: true
+        port: 5180,
+        open: false,
+        strictPort: true
     }
 });

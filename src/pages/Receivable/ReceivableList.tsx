@@ -3,9 +3,12 @@ import { Table, Button, Tag, Modal, Form, Input, InputNumber, DatePicker, Select
 import { PlusOutlined, DollarOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useAccountsStore, Receivable } from '../../store/accountsStore'
+import { useFinanceStore } from '../../store/financeStore'
+import Permission from '../../components/Permission'
 
 export default function ReceivableList() {
   const { receivables, customers, addReceivable, updateReceivable } = useAccountsStore()
+  const { addRecord } = useFinanceStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [collectModalOpen, setCollectModalOpen] = useState(false)
   const [selectedReceivable, setSelectedReceivable] = useState<Receivable | null>(null)
@@ -50,7 +53,20 @@ export default function ReceivableList() {
       const newPaidAmount = selectedReceivable.paidAmount + values.amount
       const newStatus = newPaidAmount >= selectedReceivable.amount ? 'paid' : 'partial'
       updateReceivable(selectedReceivable.id, { paidAmount: newPaidAmount, status: newStatus })
-      message.success('收款成功')
+      
+      // 自动创建收入记录
+      const today = dayjs().format('YYYY-MM-DD')
+      addRecord({
+        id: `receivable-${selectedReceivable.id}-${Date.now()}`,
+        type: 'income',
+        amount: values.amount,
+        category: '销售收入',
+        description: `应收账款收款 - ${selectedReceivable.customerName} (${selectedReceivable.invoiceNo})`,
+        date: today,
+        createdAt: today,
+      })
+      
+      message.success('收款成功，已自动生成收入记录')
       setCollectModalOpen(false)
     })
   }
@@ -77,7 +93,9 @@ export default function ReceivableList() {
       title: '操作', key: 'action',
       render: (_: unknown, record: Receivable) => (
         record.status !== 'paid' && (
-          <Button icon={<DollarOutlined />} size="small" type="primary" onClick={() => openCollectModal(record)}>收款</Button>
+          <Permission action="update">
+            <Button icon={<DollarOutlined />} size="small" type="primary" onClick={() => openCollectModal(record)}>收款</Button>
+          </Permission>
         )
       ),
     },
