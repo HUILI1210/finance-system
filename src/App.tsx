@@ -27,7 +27,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/finance-system">
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
