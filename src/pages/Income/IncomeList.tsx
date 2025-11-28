@@ -1,0 +1,105 @@
+import { useState } from 'react'
+import { Table, Button, Space, Input, Select, Popconfirm, message, Tag } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
+import dayjs from 'dayjs'
+import { useFinanceStore, FinanceRecord } from '../../store/financeStore'
+import ExportButton from '../../components/ExportButton'
+import ImportButton from '../../components/ImportButton'
+
+const categories = ['销售收入', '服务收入', '投资收益', '其他收入']
+
+export default function IncomeList() {
+  const navigate = useNavigate()
+  const { records, deleteRecord, addRecord } = useFinanceStore()
+  const incomeRecords = records.filter(r => r.type === 'income')
+  
+  const [searchText, setSearchText] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
+
+  const filteredRecords = incomeRecords.filter(record => {
+    const matchText = record.description.includes(searchText) || record.category.includes(searchText)
+    const matchCategory = !selectedCategory || record.category === selectedCategory
+    return matchText && matchCategory
+  })
+
+  const handleImport = (data: Record<string, string>[]) => {
+    data.forEach(row => {
+      if (row['金额'] && row['类别']) {
+        addRecord({
+          id: Date.now().toString() + Math.random(),
+          type: 'income',
+          amount: parseFloat(row['金额']) || 0,
+          category: row['类别'] || '其他收入',
+          description: row['描述'] || '',
+          date: row['日期'] || dayjs().format('YYYY-MM-DD'),
+          createdAt: dayjs().format('YYYY-MM-DD'),
+        })
+      }
+    })
+  }
+
+  const exportColumns = [
+    { title: '日期', dataIndex: 'date' },
+    { title: '类别', dataIndex: 'category' },
+    { title: '描述', dataIndex: 'description' },
+    { title: '金额', dataIndex: 'amount', render: (v: unknown) => String(v) },
+  ]
+
+  const handleDelete = (id: string) => {
+    deleteRecord(id)
+    message.success('删除成功')
+  }
+
+  const columns = [
+    { title: '日期', dataIndex: 'date', key: 'date', sorter: (a: FinanceRecord, b: FinanceRecord) => dayjs(a.date).unix() - dayjs(b.date).unix() },
+    { title: '类别', dataIndex: 'category', key: 'category', render: (cat: string) => <Tag color="green">{cat}</Tag> },
+    { title: '描述', dataIndex: 'description', key: 'description' },
+    { title: '金额', dataIndex: 'amount', key: 'amount', render: (val: number) => `¥${val.toLocaleString()}`, sorter: (a: FinanceRecord, b: FinanceRecord) => a.amount - b.amount },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: unknown, record: FinanceRecord) => (
+        <Space>
+          <Button icon={<EditOutlined />} size="small" onClick={() => navigate(`/income/edit/${record.id}`)}>编辑</Button>
+          <Popconfirm title="确定删除？" onConfirm={() => handleDelete(record.id)}>
+            <Button icon={<DeleteOutlined />} size="small" danger>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ]
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">收入管理</h2>
+        <Space>
+          <ImportButton onImport={handleImport} />
+          <ExportButton data={filteredRecords as unknown as Record<string, unknown>[]} columns={exportColumns} filename="收入记录" />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/income/create')}>
+            新增收入
+          </Button>
+        </Space>
+      </div>
+      <div className="flex gap-4 mb-4">
+        <Input
+          placeholder="搜索描述或类别"
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={e => setSearchText(e.target.value)}
+          style={{ width: 250 }}
+        />
+        <Select
+          placeholder="选择类别"
+          allowClear
+          style={{ width: 150 }}
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+          options={categories.map(c => ({ label: c, value: c }))}
+        />
+      </div>
+      <Table columns={columns} dataSource={filteredRecords} rowKey="id" />
+    </div>
+  )
+}
