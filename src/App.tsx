@@ -18,6 +18,7 @@ const Reports = lazy(() => import('./pages/Reports'))
 const Settings = lazy(() => import('./pages/Settings'))
 const EmployeeList = lazy(() => import('./pages/Salary/EmployeeList'))
 const PayrollList = lazy(() => import('./pages/Salary/PayrollList'))
+const SalaryFormulaList = lazy(() => import('./pages/Salary/SalaryFormulaList'))
 const BankAccounts = lazy(() => import('./pages/Bank/BankAccounts'))
 const ReceivableList = lazy(() => import('./pages/Receivable/ReceivableList'))
 const PayableList = lazy(() => import('./pages/Payable/PayableList'))
@@ -68,6 +69,7 @@ function App() {
               <Route path="budget" element={<BudgetList />} />
               <Route path="salary/employees" element={<EmployeeList />} />
               <Route path="salary/payroll" element={<PayrollList />} />
+              <Route path="salary/formulas" element={<SalaryFormulaList />} />
               <Route path="bank" element={<BankAccounts />} />
               <Route path="receivable" element={<ReceivableList />} />
               <Route path="payable" element={<PayableList />} />

@@ -40,6 +40,7 @@ const allMenuItems = [
     children: [
       { key: '/salary/employees', label: '员工档案' },
       { key: '/salary/payroll', label: '工资单' },
+      { key: '/salary/formulas', label: '工资公式' },
     ]
   },
   { key: '/bank', icon: <BankOutlined />, label: '银行账户' },
