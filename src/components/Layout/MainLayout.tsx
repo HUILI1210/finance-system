@@ -18,6 +18,7 @@ import {
   AuditOutlined,
   FileProtectOutlined,
   PayCircleOutlined,
+  SolutionOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../../store/authStore'
 
@@ -44,6 +45,7 @@ const menuItems = [
   { key: '/tax', icon: <AuditOutlined />, label: '税务管理' },
   { key: '/contract', icon: <FileProtectOutlined />, label: '合同管理' },
   { key: '/expense-report', icon: <PayCircleOutlined />, label: '费用报销' },
+  { key: '/quotation', icon: <SolutionOutlined />, label: '报价管理' },
   { key: '/reports', icon: <BarChartOutlined />, label: '报表中心' },
   { key: '/settings', icon: <SettingOutlined />, label: '系统设置' },
 ]

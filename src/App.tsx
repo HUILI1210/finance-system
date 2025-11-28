@@ -18,6 +18,7 @@ import InvoiceList from './pages/Invoice/InvoiceList'
 import TaxList from './pages/Tax/TaxList'
 import ContractList from './pages/Contract/ContractList'
 import ExpenseReportList from './pages/Expense/ExpenseReportList'
+import QuotationList from './pages/Quotation/QuotationList'
 import { useAuthStore } from './store/authStore'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,7 @@ function App() {
           <Route path="tax" element={<TaxList />} />
           <Route path="contract" element={<ContractList />} />
           <Route path="expense-report" element={<ExpenseReportList />} />
+          <Route path="quotation" element={<QuotationList />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
         </Route>
